@@ -1,0 +1,60 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <vector>
+#include <algorithm>
+
+std::vector<std::string> vec(std::string stroka){
+    std::istringstream iss(stroka);
+    std::vector<std::string> words;
+    std::string word;
+    while(iss >> word){
+        words.push_back(word);
+    }
+    return words;
+}
+int main() {
+	std::string line;
+	std::fstream file("RPN_expression");
+	
+	std::ofstream out("expression_values");
+	std::vector<std::string> znak = {"+", "-", "*", "/"};
+
+	while (std::getline(file, line)){
+    std::vector<std::string> elems = vec(line);
+    std::vector<int> stek = {};
+    std::string str = "";
+    for(int i = 0; i < elems.size(); i += 1){
+        if (std::find(znak.begin(), znak.end(), elems[i]) == znak.end()) {
+            int x = std::stoi(elems[i]);
+            stek.push_back(x);
+        } else {
+            if (stek.size() >= 2){
+                int b = stek.back(); stek.pop_back();
+                int a = stek.back(); stek.pop_back();
+                int res = 0;
+                if (elems[i] == "+") {
+                    res = a + b;
+                }
+                if (elems[i] == "*") {
+                    res = a * b;
+                }
+                if (elems[i] == "-") {
+                    res = a - b;
+                }
+                if (elems[i] == "/") {
+                    res = a / b;
+                }
+            stek.push_back(res);
+            }
+        }
+    }
+    std::string itog = std::to_string(stek.back());
+    std::string n_line = line + " = " + itog;
+    out << n_line << std::endl;
+	}
+	file.close();
+	out.close();
+	return 0;
+}
