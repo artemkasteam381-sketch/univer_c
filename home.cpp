@@ -1,3 +1,5 @@
+// Copyright (c) 2024 artemkasteam381-sketch
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -58,4 +60,5 @@ int main() {
 	out.close();
 	return 0;
 }
+
 
