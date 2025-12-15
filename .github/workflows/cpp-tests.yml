@@ -17,7 +17,7 @@ jobs:
       run: sudo apt-get update && sudo apt-get install -y g++ make
     
     - name: Compile
-      run: g++ -std=c++11 -o test_heap TextHeap.cpp Heap.tpp
+      run: g++ -std=c++11 -o test_heap TestHeap.cpp Heap.tpp
     
     - name: Run tests
       run: ./test_heap
