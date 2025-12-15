@@ -1,0 +1,91 @@
+name: C++ CI
+
+on:
+  push:
+    branches: [Sparsevector]
+  pull_request:
+    branches: [Sparsevector]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Debug - Show all files
+      run: |
+        echo "=== ВСЕ ФАЙЛЫ В ПРОЕКТЕ ==="
+        find . -type f -name "*.cpp" -o -name "*.h" -o -name "Makefile" -o -name "CMakeLists.txt" | sort
+        
+    - name: Install essentials and GoogleTest
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y g++ cmake make libgtest-dev
+        
+        # Собираем и устанавливаем GoogleTest
+        echo "Устанавливаем GoogleTest..."
+        cd /usr/src/gtest
+        sudo cmake CMakeLists.txt
+        sudo make
+        sudo cp lib/*.a /usr/lib
+        echo "✅ GoogleTest установлен"
+        
+    - name: Direct compilation test
+      run: |
+        echo "=== ПРЯМАЯ КОМПИЛЯЦИЯ ==="
+        # 1. Проверяем базовую компиляцию
+        g++ -std=c++17 -c SparseVector.cpp 2>&1 && echo "✅ SparseVector.cpp компилируется"
+        
+        # 2. Ищем тестовый файл
+        TEST_FILE=""
+        if [ -f "TestSparseVector.cpp" ]; then
+          TEST_FILE="TestSparseVector.cpp"
+        elif [ -f "tests.cpp" ]; then
+          TEST_FILE="tests.cpp"
+        else
+          echo "⚠️ Тестовый файл не найден! Ищем..."
+          find . -name "*test*.cpp" -o -name "*Test*.cpp" | head -5
+        fi
+        
+        # 3. Если нашли тестовый файл, компилируем С GoogleTest
+        if [ ! -z "$TEST_FILE" ]; then
+          echo "Компилируем $TEST_FILE с GoogleTest..."
+          g++ -std=c++17 SparseVector.cpp "$TEST_FILE" -o test_runner -lgtest -lgtest_main -lpthread 2>&1
+          
+          if [ -f "test_runner" ]; then
+            echo "✅ Тесты скомпилированы, запускаем..."
+            ./test_runner
+          else
+            echo "❌ Не удалось скомпилировать тесты"
+            echo "Пробуем без GoogleTest для диагностики..."
+            g++ -std=c++17 SparseVector.cpp "$TEST_FILE" -o simple_test 2>&1
+          fi
+        fi
+        
+    - name: Run example
+      run: |
+        echo "=== ПРИМЕР ПРОГРАММЫ ==="
+        if [ -f "example.cpp" ]; then
+          g++ -std=c++17 SparseVector.cpp example.cpp -o example_runner 2>&1
+          if [ -f "example_runner" ]; then
+            echo "✅ Пример скомпилирован, запускаем..."
+            ./example_runner
+          else
+            echo "❌ Не удалось скомпилировать пример"
+          fi
+        else
+          echo "⚠️ example.cpp не найден"
+        fi
+        
+    - name: Check for compilation errors
+      if: failure()
+      run: |
+        echo "=== ДИАГНОСТИКА ОШИБОК ==="
+        echo "Проверяем наличие GoogleTest библиотек..."
+        ls -la /usr/lib/libgtest* 2>/dev/null || echo "Библиотеки GoogleTest не найдены"
+        echo ""
+        echo "Проверяем заголовочные файлы..."
+        find /usr -name "gtest.h" 2>/dev/null | head -3
