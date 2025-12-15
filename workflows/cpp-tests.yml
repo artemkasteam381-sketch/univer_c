@@ -1,39 +1,26 @@
-name: C++ CI with Google Test
+name: C++ Tests
 
-on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:  
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      
-    - name: Show project structure
+    - uses: actions/checkout@v3
+    
+    - name: Check files
       run: |
-        echo "=== СТРУКТУРА ПРОЕКТА ==="
+        echo "=== ПРОВЕРКА ФАЙЛОВ ==="
         ls -la
         echo ""
-        echo "=== ТЕСТОВЫЕ ФАЙЛЫ ==="
-        find . -name "*test*" -o -name "*Test*" | grep -v ".git"
-        echo ""
-        echo "=== MAKEFILE ==="
-        if [ -f "Makefile" ]; then
-          head -30 Makefile
-        else
-          echo "Makefile не найден"
-        fi
+        echo "Важные файлы:"
+        ls -la SparseVector.h SparseVector.cpp TestSparseVector.cpp example.cpp CMakeLists.txt Makefile 2>/dev/null || echo "Некоторые файлы отсутствуют"
         
-    - name: Install dependencies
+    - name: Install
       run: |
         sudo apt-get update
-        sudo apt-get install -y g++ cmake make libgtest-dev
+        sudo apt-get install -y g++ make cmake libgtest-dev
         
     - name: Setup Google Test
       run: |
@@ -42,70 +29,33 @@ jobs:
         sudo make
         sudo cp lib/*.a /usr/lib
         
-    - name: Try CMake build
+    - name: Run direct tests
       run: |
-        echo "=== ПОПЫТКА CMAKE ==="
-        if [ -f "CMakeLists.txt" ]; then
-          mkdir -p build
-          cd build
-          cmake ..
-          make -j4
-          echo "✅ CMake build успешен"
-          
-          # Ищем исполняемые файлы тестов
-          echo "Ищем тестовые программы..."
-          find . -type f -executable -name "*test*" -o -name "*Test*" | while read test_prog; do
-            echo "Запускаю: $test_prog"
-            ./"$test_prog" || true
-          done
-        else
-          echo "CMakeLists.txt не найден"
-        fi
+        echo "=== ПРЯМОЙ ЗАПУСК ТЕСТОВ ==="
+        g++ -std=c++17 -c SparseVector.cpp && echo "✅ SparseVector.cpp compiled"
+        g++ -std=c++17 SparseVector.cpp TestSparseVector.cpp -o test_runner -lgtest -lgtest_main -lpthread
+        ./test_runner
         
-    - name: Try Makefile build
+    - name: Run example
       run: |
-        echo "=== ПОПЫТКА MAKEFILE ==="
-        if [ -f "Makefile" ]; then
-          make clean || true
-          make || echo "⚠️ make завершился с ошибкой"
-          
-          # Пробуем запустить тесты через make
-          echo "Пробуем make test..."
-          make test || echo "⚠️ make test завершился с ошибкой"
-        else
-          echo "Makefile не найден"
-        fi
+        echo "=== ЗАПУСК ПРИМЕРА ==="
+        g++ -std=c++17 SparseVector.cpp example.cpp -o example_runner
+        ./example_runner
         
-    - name: Direct compilation test
-      run: |
-        echo "=== ПРЯМАЯ КОМПИЛЯЦИЯ ==="
-        # Ищем файлы
-        CPP_FILES=$(find . -name "*.cpp" -not -path "./build/*")
-        echo "Найденные .cpp файлы: $CPP_FILES"
-        
-        # Пробуем скомпилировать все .cpp файлы кроме тестов
-        g++ -std=c++17 -c SparseVector.cpp && echo "✅ SparseVector.cpp скомпилирован"
-        
-        # Пробуем найти и скомпилировать тесты
-        TEST_FILE=""
-        if [ -f "TestSparseVector.cpp" ]; then
-          TEST_FILE="TestSparseVector.cpp"
-        elif [ -f "test.cpp" ]; then
-          TEST_FILE="test.cpp"
-        elif [ $(find . -name "*test*.cpp" -not -path "./build/*" | wc -l) -gt 0 ]; then
-          TEST_FILE=$(find . -name "*test*.cpp" -not -path "./build/*" | head -1)
-        fi
-        
-        if [ ! -z "$TEST_FILE" ]; then
-          echo "Найден тестовый файл: $TEST_FILE"
-          g++ -std=c++17 SparseVector.cpp "$TEST_FILE" -o direct_test -lgtest -lgtest_main -lpthread
-          ./direct_test
-        else
-          echo "⚠️ Тестовый файл не найден"
-        fi
-        
-    - name: Check for executables
+    - name: Try CMake
       if: always()
       run: |
-        echo "=== НАЙДЕННЫЕ ИСПОЛНЯЕМЫЕ ФАЙЛЫ ==="
-        find . -type f -executable | grep -v ".git"
+        if [ -f "CMakeLists.txt" ]; then
+          echo "=== ТЕСТ CMake ==="
+          mkdir -p build && cd build
+          cmake .. && make
+        fi
+        
+    - name: Try Makefile
+      if: always()
+      run: |
+        if [ -f "Makefile" ]; then
+          echo "=== ТЕСТ Makefile ==="
+          make clean || true
+          make test || make || echo "Make завершился"
+        fi
