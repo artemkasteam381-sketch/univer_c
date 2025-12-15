@@ -27,7 +27,9 @@ jobs:
     
     - name: Compile tests
       run: |
-        g++ -std=c++17 -pthread -o test_runner TestHeap.cpp Heap.tpp -lgtest -lgtest_main
+        # ВСЁ ПРАВИЛЬНО: компилируем только TestHeap.cpp
+        # Heap.tpp автоматически включится через Heap.h
+        g++ -std=c++17 -pthread -I. -o test_runner TestHeap.cpp -lgtest -lgtest_main
     
     - name: Run tests
       run: ./test_runner
