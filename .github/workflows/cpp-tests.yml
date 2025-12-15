@@ -1,0 +1,35 @@
+name: C++ Tests
+
+on:
+  push:
+    branches: [ heap ]
+  pull_request:
+    branches: [ heap ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y g++ make cmake libgtest-dev
+    
+    - name: Build and install Google Test
+      run: |
+        cd /usr/src/gtest
+        sudo cmake .
+        sudo make
+        sudo cp lib/*.a /usr/lib
+    
+    - name: Compile tests
+      run: |
+        # ВСЁ ПРАВИЛЬНО: компилируем только TestHeap.cpp
+        # Heap.tpp автоматически включится через Heap.h
+        g++ -std=c++17 -pthread -I. -o test_runner TestHeap.cpp -lgtest -lgtest_main
+    
+    - name: Run tests
+      run: ./test_runner
