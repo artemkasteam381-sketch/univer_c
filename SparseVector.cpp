@@ -310,12 +310,3 @@ SparseVector SparseVector::operator-(const SparseVector& other)const{
 }
 
 
-
-int main() {
-    SparseVector vec(10);
-    SparseVector vec1(10);
-    vec.setElem(7,100);
-    vec1.setElem(7,200);
-    std::cout<<vec.getElem(7);
-    return 0;
-}
