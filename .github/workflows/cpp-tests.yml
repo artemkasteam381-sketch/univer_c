@@ -12,7 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
       
     - name: Install dependencies
       run: |
@@ -26,12 +27,21 @@ jobs:
         sudo make
         sudo cp lib/*.a /usr/lib
         
-    - name: Compile and run tests
+    - name: List files (debug)
+      run: ls -la
+      
+    - name: Compile tests
       run: |
-        g++ -std=c++17 TestHeap.cpp -o heap_test -lgtest -lgtest_main -lpthread
+        g++ -std=c++17 -I. TestHeap.cpp -o heap_test -lgtest -lgtest_main -lpthread
+        
+    - name: Run tests
+      run: |
         ./heap_test
+        
+    - name: Compile example
+      run: |
+        g++ -std=c++17 -I. example.cpp -o heap_example
         
     - name: Run example
       run: |
-        g++ -std=c++17 example.cpp -o heap_example
         ./heap_example
