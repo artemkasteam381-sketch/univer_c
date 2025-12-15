@@ -4,14 +4,21 @@
 #include <algorithm>
 
 template <typename T, size_t Capacity>
-size_t Heap<T, Capacity>::parent(size_t idx) const { return (idx - 1) / 2; }
+size_t Heap<T, Capacity>::parent(size_t idx) const { 
+    return (idx - 1) / 2;
+}
 
 template <typename T, size_t Capacity>
-size_t Heap<T, Capacity>::leftChild(size_t idx) const { return 2 * idx + 1; }
+size_t Heap<T, Capacity>::leftChild(size_t idx) const { 
+    return 2 * idx + 1;
+}
 
 template <typename T, size_t Capacity>
-size_t Heap<T, Capacity>::rightChild(size_t idx) const { return 2 * idx + 2; }
+size_t Heap<T, Capacity>::rightChild(size_t idx) const { 
+    return 2 * idx + 2;
+}
 
+// Восстановление свойств кучи снизу вверх
 template <typename T, size_t Capacity>
 void Heap<T, Capacity>::siftUp(size_t idx) {
     if (idx == 0) return;
@@ -32,6 +39,7 @@ void Heap<T, Capacity>::siftUp(size_t idx) {
     }
 }
 
+// Восстановление свойств кучи сверху вниз
 template <typename T, size_t Capacity>
 void Heap<T, Capacity>::siftDown(size_t idx) {
     while (leftChild(idx) < currentSize) {
@@ -61,23 +69,29 @@ void Heap<T, Capacity>::siftDown(size_t idx) {
     }
 }
 
+// Конструкторы
 template <typename T, size_t Capacity>
-Heap<T, Capacity>::Heap(bool minHeap) : currentSize(0), isMinHeap(minHeap) {}
+Heap<T, Capacity>::Heap(bool minHeap) 
+    : currentSize(0), isMinHeap(minHeap) {}
 
 template <typename T, size_t Capacity>
-Heap<T, Capacity>::Heap(const T* arr, size_t n, bool minHeap) : currentSize(0), isMinHeap(minHeap) {
+Heap<T, Capacity>::Heap(const T* arr, size_t n, bool minHeap) 
+    : currentSize(0), isMinHeap(minHeap) {
     for (size_t i = 0; i < n && i < Capacity; ++i) {
         insert(arr[i]);
     }
 }
 
+// Конструктор копирования
 template <typename T, size_t Capacity>
-Heap<T, Capacity>::Heap(const Heap& other) : currentSize(other.currentSize), isMinHeap(other.isMinHeap) {
+Heap<T, Capacity>::Heap(const Heap& other) 
+    : currentSize(other.currentSize), isMinHeap(other.isMinHeap) {
     for (size_t i = 0; i < currentSize; ++i) {
         data[i] = other.data[i];
     }
 }
 
+// Оператор присваивания
 template <typename T, size_t Capacity>
 Heap<T, Capacity>& Heap<T, Capacity>::operator=(const Heap& other) {
     if (this != &other) {
@@ -90,6 +104,7 @@ Heap<T, Capacity>& Heap<T, Capacity>::operator=(const Heap& other) {
     return *this;
 }
 
+// Основные операции
 template <typename T, size_t Capacity>
 void Heap<T, Capacity>::insert(const T& value) {
     if (currentSize >= Capacity) {
@@ -133,6 +148,7 @@ T Heap<T, Capacity>::extract() {
     return root;
 }
 
+// Состояние кучи
 template <typename T, size_t Capacity>
 bool Heap<T, Capacity>::empty() const {
     return currentSize == 0;
@@ -163,6 +179,7 @@ void Heap<T, Capacity>::clear() {
     currentSize = 0;
 }
 
+// Проверка корректности структуры
 template <typename T, size_t Capacity>
 bool Heap<T, Capacity>::isValid() const {
     for (size_t i = 1; i < currentSize; ++i) {
@@ -176,6 +193,7 @@ bool Heap<T, Capacity>::isValid() const {
     return true;
 }
 
+// Доступ по индексу
 template <typename T, size_t Capacity>
 const T& Heap<T, Capacity>::operator[](size_t idx) const {
     if (idx >= currentSize) {
@@ -184,10 +202,15 @@ const T& Heap<T, Capacity>::operator[](size_t idx) const {
     return data[idx];
 }
 
+// Итераторы
 template <typename T, size_t Capacity>
-const T* Heap<T, Capacity>::begin() const { return data; }
+const T* Heap<T, Capacity>::begin() const { 
+    return data;
+}
 
 template <typename T, size_t Capacity>
-const T* Heap<T, Capacity>::end() const { return data + currentSize; }
+const T* Heap<T, Capacity>::end() const { 
+    return data + currentSize;
+}
 
 #endif
