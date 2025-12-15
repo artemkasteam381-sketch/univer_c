@@ -19,5 +19,5 @@ jobs:
     - name: Compile
       run: g++ -std=c++11 -o test_heap TextHeap.cpp Heap.tpp
     
-    - name: run tests
+    - name: Run tests
       run: ./test_heap
